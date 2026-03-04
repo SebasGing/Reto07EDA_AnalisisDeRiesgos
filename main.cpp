@@ -85,6 +85,7 @@ void liberarMemoria();
 
 bool horaValida(const string& hora);// Valida formato y rango de hora
 int convertirAMinutos(const string& hora);// Convierte hora HH:MM a minutos totales
+string obtenerHoraActual(); //
 
 
 // =====================
@@ -184,6 +185,21 @@ void opcion3() {
 // =====================
 // FUNCIONES DE LISTA
 // =====================
+string obtenerHoraActual() {
+
+    time_t ahora = time(nullptr);
+    tm* tiempoLocal = localtime(&ahora);
+
+    int horas = tiempoLocal->tm_hour;
+    int minutos = tiempoLocal->tm_min;
+
+    stringstream ss;
+    ss << setw(2) << setfill('0') << horas
+       << ":"
+       << setw(2) << setfill('0') << minutos;
+
+    return ss.str();
+}
 void imprimirReportePorHora() {
 
     if (cabeza == nullptr) {
@@ -280,6 +296,7 @@ int convertirAMinutos(const string& hora) {
     return horas * 60 + minutos;
 }
 void agregarRegistro() {
+
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     Registro nuevo;
@@ -320,19 +337,8 @@ void agregarRegistro() {
                 cout << "Clasificacion invalida. Intente nuevamente.\n";
             }
     }
-
-    bool horaCorrecta = false;
-
-    while (!horaCorrecta) {
-        cout << "Hora de Reporte (HH:MM - formato militar): ";
-        getline(cin, nuevo.horaReporte);
-
-        if (horaValida(nuevo.horaReporte)) {
-            horaCorrecta = true;
-        } else {
-            cout << "Hora invalida. Debe estar entre 00:00 y 24:00.\n";
-        }
-    }
+    nuevo.horaReporte = obtenerHoraActual();
+    cout << "Hora registrada automaticamente: " << nuevo.horaReporte << endl;
 
     Nodo* nuevoNodo = new Nodo(nuevo);
 
