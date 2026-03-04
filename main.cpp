@@ -9,7 +9,7 @@ usuario ingrese estos datos:
 ID(10 digitos):
 Descripcion(libre):
 Clasificacion(alto, bajo, falsa amenaza):
-Hora de Reporte(hora militar, formato HH:MM, entre 00:00 y 24:59)
+la hora del reporte: lo lee el progama
 
 luego estos datos Ponlos en un nodo que tenga un apuntador de memoria,
 de modo que solo exista una lista enlazada
@@ -28,6 +28,12 @@ comparando la hora de cada resgistro con la hora que se pide.
 este es el orden
 
 Amenazas altas Deben ser atendidas en un máximo de 1 minuto y luego de este tiempo pasan al reporte final.
+Amenazas Bajas Permanecen en la cola durante 3 minutos y luego pasan al reporte final.
+Amenazas falsas Son archivadas de inmediato
+
+TEMPORAL
+ahora al imprimir el reporte,
+Amenazas altas Deben esperar en el buffer 1 minuto y luego de este tiempo pasan al reporte final.
 Amenazas Bajas Permanecen en la cola durante 3 minutos y luego pasan al reporte final.
 Amenazas falsas Son archivadas de inmediato
 */
@@ -83,9 +89,12 @@ void agregarRegistro();
 void mostrarRegistros();
 void liberarMemoria();
 
+
+bool idExiste(const string& id);
 bool horaValida(const string& hora);// Valida formato y rango de hora
 int convertirAMinutos(const string& hora);// Convierte hora HH:MM a minutos totales
-string obtenerHoraActual(); //
+string obtenerHoraActual();
+string generarNuevoID();
 
 
 // =====================
@@ -185,6 +194,43 @@ void opcion3() {
 // =====================
 // FUNCIONES DE LISTA
 // =====================
+string generarNuevoID() {
+
+    int maxNumero = 0;
+
+    Nodo* actual = cabeza;
+
+    while (actual != nullptr) {
+
+        string idActual = actual->dato.id;
+
+        // Quitar la M
+        int numero = stoi(idActual.substr(1));
+
+        if (numero > maxNumero) {
+            maxNumero = numero;
+        }
+
+        actual = actual->siguiente;
+    }
+
+    return "M" + to_string(maxNumero + 1);
+}
+bool idExiste(const string& id) {
+
+    Nodo* actual = cabeza;
+
+    while (actual != nullptr) {
+
+        if (actual->dato.id == id) {
+            return true;  // Ya existe
+        }
+
+        actual = actual->siguiente;
+    }
+
+    return false; // No existe
+}
 string obtenerHoraActual() {
 
     time_t ahora = time(nullptr);
@@ -254,13 +300,17 @@ void imprimirReportePorHora() {
 }
 bool idValido(const string& id) {
 
-    // Debe tener exactamente 10 caracteres
-    if (id.length() != 10)
+    // Debe tener al menos 2 caracteres: M + al menos un dígito
+    if (id.length() < 2)
         return false;
 
-    // Todos deben ser dígitos
-    for (char c : id) {
-        if (!isdigit(c))
+    // Primer carácter debe ser M mayúscula
+    if (id[0] != 'M')
+        return false;
+
+    // El resto deben ser solo dígitos
+    for (size_t i = 1; i < id.length(); i++) {
+        if (!isdigit(id[i]))
             return false;
     }
 
@@ -301,18 +351,8 @@ void agregarRegistro() {
 
     Registro nuevo;
 
-    bool idCorrecto = false;
-
-    while (!idCorrecto) {
-        cout << "Cedula/TI colombiana (10 digitos): ";
-        getline(cin, nuevo.id);
-
-        if (idValido(nuevo.id)) {
-            idCorrecto = true;
-        } else {
-            cout << "ID invalido. Debe contener exactamente 10 digitos numericos.\n";
-        }
-    }
+    nuevo.id = generarNuevoID();
+    cout << "ID asignado automaticamente: " << nuevo.id << endl;
 
     cout << "Descripcion: ";
     getline(cin, nuevo.descripcion);
