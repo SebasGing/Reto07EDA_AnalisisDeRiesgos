@@ -238,11 +238,14 @@ string obtenerHoraActual() {
 
     int horas = tiempoLocal->tm_hour;
     int minutos = tiempoLocal->tm_min;
+    int segundos = tiempoLocal->tm_sec;
 
     stringstream ss;
     ss << setw(2) << setfill('0') << horas
        << ":"
-       << setw(2) << setfill('0') << minutos;
+       << setw(2) << setfill('0') << minutos
+       << ":"
+       << setw(2) << setfill('0') << segundos;
 
     return ss.str();
 }
@@ -260,7 +263,7 @@ void imprimirReportePorHora() {
 
     while (!horaCorrecta) {
         cout << "Ingrese hora limite (HH:MM): ";
-        getline(cin,horaConsulta);
+        getline(cin, horaConsulta);
 
         if (horaValida(horaConsulta)) {
             horaCorrecta = true;
@@ -271,10 +274,79 @@ void imprimirReportePorHora() {
 
     int minutosLimite = convertirAMinutos(horaConsulta);
 
-    Nodo* actual = cabeza;
-    bool encontrado = false;
+    Nodo* actual;
 
-    cout << "\n====== REPORTE HASTA " << horaConsulta << " ======\n";
+    cout << "\n==============================\n";
+    cout << "REPORTE HASTA " << horaConsulta << endl;
+    cout << "==============================\n";
+
+    // =============================
+    // AMENAZAS ALTAS
+    // =============================
+
+    cout << "\nLista de Amenazas Altas:\n";
+    actual = cabeza;
+    bool hayAltas = false;
+
+    while (actual != nullptr) {
+
+        int minutosRegistro = convertirAMinutos(actual->dato.horaReporte);
+
+        if (minutosRegistro <= minutosLimite &&
+            (actual->dato.clasificacion == "Alto" ||
+             actual->dato.clasificacion == "alto")) {
+
+            cout << actual->dato.id
+            << " (" << actual->dato.clasificacion << "), "
+            << actual->dato.horaReporte << endl;
+
+            hayAltas = true;
+        }
+
+        actual = actual->siguiente;
+    }
+
+    if (!hayAltas) {
+        cout << "No hay amenazas altas en ese rango.\n";
+    }
+
+    // =============================
+    // AMENAZAS BAJAS
+    // =============================
+
+    cout << "\nLista de Amenazas Bajas:\n";
+    actual = cabeza;
+    bool hayBajas = false;
+
+    while (actual != nullptr) {
+
+        int minutosRegistro = convertirAMinutos(actual->dato.horaReporte);
+
+        if (minutosRegistro <= minutosLimite &&
+            (actual->dato.clasificacion == "Bajo" ||
+             actual->dato.clasificacion == "bajo")) {
+
+            cout << actual->dato.id
+            << " (" << actual->dato.clasificacion << "), "
+            << actual->dato.horaReporte << endl;
+
+            hayBajas = true;
+        }
+
+        actual = actual->siguiente;
+    }
+
+    if (!hayBajas) {
+        cout << "No hay amenazas bajas en ese rango.\n";
+    }
+
+    // =============================
+    // HISTORIAL COMPLETO
+    // =============================
+
+    cout << "\nHistorial:\n";
+    actual = cabeza;
+    bool hayHistorial = false;
 
     while (actual != nullptr) {
 
@@ -282,21 +354,22 @@ void imprimirReportePorHora() {
 
         if (minutosRegistro <= minutosLimite) {
 
-            encontrado = true;
+            cout << actual->dato.id
+            << " (" << actual->dato.clasificacion << "), "
+            << actual->dato.horaReporte
+            << endl;
 
-            cout << "\nID: " << actual->dato.id << endl;
-            cout << "Descripcion: " << actual->dato.descripcion << endl;
-            cout << "Clasificacion: " << actual->dato.clasificacion << endl;
-            cout << "Hora: " << actual->dato.horaReporte << endl;
-            cout << "-----------------------------\n";
+            hayHistorial = true;
         }
 
         actual = actual->siguiente;
     }
 
-    if (!encontrado) {
-        cout << "No hay registros anteriores o iguales a esa hora.\n";
+    if (!hayHistorial) {
+        cout << "No hay registros en ese rango.\n";
     }
+
+    cout << "\n=================================\n";
 }
 bool idValido(const string& id) {
 
@@ -341,8 +414,10 @@ bool horaValida(const string& hora) {
     return true;
 }
 int convertirAMinutos(const string& hora) {
+
     int horas = stoi(hora.substr(0, 2));
     int minutos = stoi(hora.substr(3, 2));
+
     return horas * 60 + minutos;
 }
 void agregarRegistro() {
@@ -361,21 +436,32 @@ void agregarRegistro() {
     bool clasificacionValida = false;
 
     while (!clasificacionValida) {
+
         cout << "Clasificacion (Alto, Bajo, Falsa Amenaza): ";
         getline(cin, nuevo.clasificacion);
 
-        if (nuevo.clasificacion == "Alto" ||
-            nuevo.clasificacion == "alto" ||
-            nuevo.clasificacion == "Bajo" ||
-            nuevo.clasificacion == "bajo" ||
-            nuevo.clasificacion == "Falsa Amenaza" ||
-            nuevo.clasificacion == "falsa amenaza") {
+        string temp = nuevo.clasificacion;
 
+        // Convertir todo a minusculas
+        for (char &c : temp) {
+            c = tolower(c);
+        }
+
+        if (temp == "alto") {
+            nuevo.clasificacion = "Alto";
             clasificacionValida = true;
-
-            } else {
-                cout << "Clasificacion invalida. Intente nuevamente.\n";
-            }
+        }
+        else if (temp == "bajo") {
+            nuevo.clasificacion = "Bajo";
+            clasificacionValida = true;
+        }
+        else if (temp == "falsa amenaza") {
+            nuevo.clasificacion = "Falsa Amenaza";
+            clasificacionValida = true;
+        }
+        else {
+            cout << "Clasificacion invalida. Intente nuevamente.\n";
+        }
     }
     nuevo.horaReporte = obtenerHoraActual();
     cout << "Hora registrada automaticamente: " << nuevo.horaReporte << endl;
