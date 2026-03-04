@@ -43,6 +43,8 @@ Amenazas falsas Son archivadas de inmediato
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <thread>
+#include <chrono>
 
 using namespace std;
 
@@ -96,7 +98,16 @@ int convertirAMinutos(const string& hora);// Convierte hora HH:MM a minutos tota
 string obtenerHoraActual();
 string generarNuevoID();
 
+// =====================
+// CONFIGURACION INTERNA DE IMPRESION
+// (Para cambiar los tiempo de impresion)
+// =====================
 
+//const int TIEMPO_ALTAS_SEG = 60;   // 1 minuto
+//const int TIEMPO_BAJAS_SEG = 180;  // 3 minutos
+
+const int TIEMPO_ALTAS_SEG = 5;   // 5 segundos (para pruebas rápidas)
+const int TIEMPO_BAJAS_SEG = 10;  // 10 segundos (para pruebas rápidas)
 // =====================
 // FUNCIÓN PRINCIPAL
 // =====================
@@ -279,12 +290,17 @@ void imprimirReportePorHora() {
     cout << "\n==============================\n";
     cout << "REPORTE HASTA " << horaConsulta << endl;
     cout << "==============================\n";
+    cout.flush();
 
     // =============================
-    // AMENAZAS ALTAS
+    // ESPERA 1 MINUTO -> ALTAS
     // =============================
+
+    std::this_thread::sleep_for(std::chrono::seconds(TIEMPO_ALTAS_SEG));
 
     cout << "\nLista de Amenazas Altas:\n";
+    cout.flush();
+
     actual = cabeza;
     bool hayAltas = false;
 
@@ -293,13 +309,13 @@ void imprimirReportePorHora() {
         int minutosRegistro = convertirAMinutos(actual->dato.horaReporte);
 
         if (minutosRegistro <= minutosLimite &&
-            (actual->dato.clasificacion == "Alto" ||
-             actual->dato.clasificacion == "alto")) {
+            actual->dato.clasificacion == "Alto") {
 
             cout << actual->dato.id
-            << " (" << actual->dato.clasificacion << "), "
-            << actual->dato.horaReporte << endl;
+                 << " (" << actual->dato.clasificacion << "), "
+                 << actual->dato.horaReporte << endl;
 
+            cout.flush();
             hayAltas = true;
         }
 
@@ -308,13 +324,18 @@ void imprimirReportePorHora() {
 
     if (!hayAltas) {
         cout << "No hay amenazas altas en ese rango.\n";
+        cout.flush();
     }
 
     // =============================
-    // AMENAZAS BAJAS
+    // ESPERA 3 MINUTOS -> BAJAS
     // =============================
 
+    std::this_thread::sleep_for(std::chrono::seconds(TIEMPO_BAJAS_SEG));
+
     cout << "\nLista de Amenazas Bajas:\n";
+    cout.flush();
+
     actual = cabeza;
     bool hayBajas = false;
 
@@ -323,13 +344,13 @@ void imprimirReportePorHora() {
         int minutosRegistro = convertirAMinutos(actual->dato.horaReporte);
 
         if (minutosRegistro <= minutosLimite &&
-            (actual->dato.clasificacion == "Bajo" ||
-             actual->dato.clasificacion == "bajo")) {
+            actual->dato.clasificacion == "Bajo") {
 
             cout << actual->dato.id
-            << " (" << actual->dato.clasificacion << "), "
-            << actual->dato.horaReporte << endl;
+                 << " (" << actual->dato.clasificacion << "), "
+                 << actual->dato.horaReporte << endl;
 
+            cout.flush();
             hayBajas = true;
         }
 
@@ -338,13 +359,16 @@ void imprimirReportePorHora() {
 
     if (!hayBajas) {
         cout << "No hay amenazas bajas en ese rango.\n";
+        cout.flush();
     }
 
     // =============================
-    // HISTORIAL COMPLETO
+    // HISTORIAL -> INMEDIATO
     // =============================
 
     cout << "\nHistorial:\n";
+    cout.flush();
+
     actual = cabeza;
     bool hayHistorial = false;
 
@@ -355,10 +379,11 @@ void imprimirReportePorHora() {
         if (minutosRegistro <= minutosLimite) {
 
             cout << actual->dato.id
-            << " (" << actual->dato.clasificacion << "), "
-            << actual->dato.horaReporte
-            << endl;
+                 << " (" << actual->dato.clasificacion << "), "
+                 << actual->dato.horaReporte
+                 << endl;
 
+            cout.flush();
             hayHistorial = true;
         }
 
@@ -367,9 +392,11 @@ void imprimirReportePorHora() {
 
     if (!hayHistorial) {
         cout << "No hay registros en ese rango.\n";
+        cout.flush();
     }
 
     cout << "\n=================================\n";
+    cout.flush();
 }
 bool idValido(const string& id) {
 
