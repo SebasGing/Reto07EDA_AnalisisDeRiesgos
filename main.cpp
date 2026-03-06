@@ -1,4 +1,6 @@
 /*
+ULtima nota: podria haber impreso las amenazas que se ya no entran en al rango de espera de q o 3 minutos, algo tipo
+(m1 (alto)hora+60segundos < que la hora que pide el informe, que no espere y lo imprima automaticamente )
 Colas con prioridad (con solo una lista)
 3 tipos de nodos, Amenaza falsa, Urgente, Reconocimiento
 el programa debe leer:  id, descripcion, clasificacion y hora de recepcion
